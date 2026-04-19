@@ -27,7 +27,7 @@ public class ObjectLoader {
         storeDataInAttribList(0,3,vertices);
         storeDataInAttribList(1,2,textureCoords);
         unbind();
-        return new Model(id,vertices.length/3);
+        return new Model(id,indices.length);
     }
 
     public int loadTexture(String fileName)throws Exception{

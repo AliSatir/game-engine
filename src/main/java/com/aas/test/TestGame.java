@@ -130,7 +130,7 @@ public class TestGame implements ILogic {
     public void render() {
         if(window.isResize()){
             GL11.glViewport(0,0, window.getWidth(), window.getHeight());
-            window.setResize(true);
+            window.setResize(false);
         }
 
         window.setClearColour(0f,0f,0f,0f);
