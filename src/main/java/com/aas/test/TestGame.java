@@ -4,6 +4,8 @@ import com.aas.core.*;
 import com.aas.core.entity.Entity;
 import com.aas.core.entity.Model;
 import com.aas.core.entity.Texture;
+import com.aas.core.lighting.DirectionalLight;
+import com.aas.core.lighting.PointLight;
 import com.aas.core.utils.Contents;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -23,12 +25,17 @@ public class TestGame implements ILogic {
 
     Vector3f cameraInk;
 
+    private float lightAngle;
+    private DirectionalLight directionalLight;
+    private PointLight pointLight;
+
     public TestGame(){
         renderer = new RenderManager();
         window = Launcher.getWindow();
         loader = new ObjectLoader();
         camera = new Camera();
         cameraInk = new Vector3f(0,0,0);
+        lightAngle = - 90;
     }
 
 
@@ -36,63 +43,19 @@ public class TestGame implements ILogic {
     public void init() throws Exception {
         renderer.init();
 
-        float[] vertices = new float[] {
-                -0.5f, 0.5f, 0.5f,
-                -0.5f, -0.5f, 0.5f,
-                0.5f, -0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                -0.5f, 0.5f, -0.5f,
-                0.5f, 0.5f, -0.5f,
-                -0.5f, -0.5f, -0.5f,
-                0.5f, -0.5f, -0.5f,
-                -0.5f, 0.5f, -0.5f,
-                0.5f, 0.5f, -0.5f,
-                -0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, -0.5f, 0.5f,
-                -0.5f, 0.5f, 0.5f,
-                -0.5f, -0.5f, 0.5f,
-                -0.5f, -0.5f, -0.5f,
-                0.5f, -0.5f, -0.5f,
-                -0.5f, -0.5f, 0.5f,
-                0.5f, -0.5f, 0.5f,
-        };
-        float[] textCoords = new float[]{
-                0.0f, 0.0f,
-                0.0f, 0.5f,
-                0.5f, 0.5f,
-                0.5f, 0.0f,
-                0.0f, 0.0f,
-                0.5f, 0.0f,
-                0.0f, 0.5f,
-                0.5f, 0.5f,
-                0.0f, 0.5f,
-                0.5f, 0.5f,
-                0.0f, 1.0f,
-                0.5f, 1.0f,
-                0.0f, 0.0f,
-                0.0f, 0.5f,
-                0.5f, 0.0f,
-                0.5f, 0.5f,
-                0.5f, 0.0f,
-                1.0f, 0.0f,
-                0.5f, 0.5f,
-                1.0f, 0.5f,
-        };
-        int[] indices = new int[]{
-                0, 1, 3, 3, 1, 2,
-                8, 10, 11, 9, 8, 11,
-                12, 13, 7, 5, 12, 7,
-                14, 15, 6, 4, 14, 6,
-                16, 18, 19, 17, 16, 19,
-                4, 6, 7, 5, 4, 7,
-        };
 
-
-        Model model = loader.loadModel(vertices,textCoords,indices);
-        model.setTexture(new Texture(loader.loadTexture("textures/grassblock.png")));
+        Model model = loader.loadOBJModel("/models/bunnyy.obj");
+        model.setTexture(new Texture(loader.loadTexture("textures/blue.jpg")),1f);
         entity = new Entity(model, new Vector3f(1,0,-5), new Vector3f(0,0,0), 1);
+
+        float lightIntensity = 1.0f;
+        Vector3f lightPos = new Vector3f(0,0,-3.2f);
+        Vector3f lightColor = new Vector3f(1,1,1);
+        pointLight = new PointLight(lightColor, lightPos, lightIntensity, 0,0,1);
+
+        lightPos = new Vector3f(-1,-10,0);
+        lightColor = new Vector3f(1,1,1);
+        directionalLight = new DirectionalLight( lightColor, lightPos, lightIntensity);
     }
 
     @Override
@@ -110,7 +73,15 @@ public class TestGame implements ILogic {
            cameraInk.y = -1;
        if(window.isKeyPressed(GLFW.GLFW_KEY_X))
            cameraInk.y = 1;
+
+       if(window.isKeyPressed(GLFW.GLFW_KEY_O)){
+           pointLight.getPosition().x += 0.1f;
+       }
+       if(window.isKeyPressed(GLFW.GLFW_KEY_P)){
+           pointLight.getPosition().x -= 0.1f;
+       }
     }
+
 
     @Override
     public void update(float interval, MouseInput mouseInput) {
@@ -123,18 +94,32 @@ public class TestGame implements ILogic {
                     , rotVec.y * Contents.MOUSE_SENSITIVITY,0);
         }
 
-        entity.incRotation(0f, 0.5f, 0f);
+        //entity.incRotation(0f, 0.25f, 0f);
+
+        lightAngle += 0.05f;
+        if(lightAngle > 90) {
+            directionalLight.setIntensity(0);
+            if(lightAngle >= 360)
+                lightAngle = -90;
+        }else if(lightAngle <= -80 || lightAngle >= 80){
+            float factor = 1 - (Math.abs(lightAngle) -80) / 10f;
+            directionalLight.setIntensity(factor);
+            directionalLight.getColour().y = Math.max(factor, 0.9f);
+            directionalLight.getColour().z = Math.max(factor, 0.5f);
+        }else{
+            directionalLight.setIntensity(1);
+            directionalLight.getColour().x = 1;
+            directionalLight.getColour().y = 1;
+            directionalLight.getColour().z = 1;
+        }
+        double angRad = Math.toRadians(lightAngle);
+        directionalLight.getDirection().x = (float) Math.sin(angRad);
+        directionalLight.getDirection().y = (float) Math.cos(angRad);
     }
 
     @Override
     public void render() {
-        if(window.isResize()){
-            GL11.glViewport(0,0, window.getWidth(), window.getHeight());
-            window.setResize(false);
-        }
-
-        window.setClearColour(0f,0f,0f,0f);
-        renderer.render(entity, camera);
+        renderer.render(entity, camera, directionalLight, pointLight);
 
     }
 
