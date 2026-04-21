@@ -114,7 +114,7 @@ public class ShaderManager {
         setUniform(uniformName + ".diffuse",  material.getDiffuseColour());
         setUniform(uniformName + ".specular",  material.getSpecularColour());
         setUniform(uniformName + ".hasTexture",   material.hasTexture() ? 1 : 0);
-        setUniform(uniformName + ".reflectance", material.getReflectence());
+        setUniform(uniformName + ".reflectance", material.getReflectance());
     }
 
     public void setUniform(String uniformName, DirectionalLight directionalLight){

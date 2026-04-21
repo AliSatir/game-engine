@@ -5,7 +5,7 @@ import org.joml.Vector4f;
 
 public class Material {
     private Vector4f ambientColour, diffuseColour, specularColour;
-    private float reflectence;
+    private float reflectance;
     private Texture texture;
 
     public Material(){
@@ -13,29 +13,37 @@ public class Material {
         this.diffuseColour = Contents.DEFAULT_COLOR;
         this.specularColour = Contents.DEFAULT_COLOR;
         this.texture = null;
-        this.reflectence = 0;
+        this.reflectance = 0;
     }
-    public Material(Vector4f colour, float reflectence){
-        this(colour,colour,colour, reflectence, null);
+    public Material(Vector4f colour, float reflectance){
+        this(colour,colour,colour, reflectance, null);
     }
 
-    public Material(Vector4f colour, float reflectence,  Texture texture){
-        this(colour,colour,colour,reflectence,texture);
+    public Material(Vector4f colour, float reflectance,  Texture texture){
+        this(colour,colour,colour,reflectance,texture);
     }
+
 
     public Material(Texture texture){
         this.ambientColour = Contents.DEFAULT_COLOR;
         this.diffuseColour = Contents.DEFAULT_COLOR;
         this.specularColour = Contents.DEFAULT_COLOR;
         this.texture = texture;
-        this.reflectence = 0;
+        this.reflectance = 0;
+    }
+    public Material(Texture texture, float reflectance){
+        this.ambientColour = Contents.DEFAULT_COLOR;
+        this.diffuseColour = Contents.DEFAULT_COLOR;
+        this.specularColour = Contents.DEFAULT_COLOR;
+        this.texture = texture;
+        this.reflectance = reflectance;
     }
 
-    public Material(Vector4f ambientColour, Vector4f diffuseColour, Vector4f specularColour, float reflectence, Texture texture) {
+    public Material(Vector4f ambientColour, Vector4f diffuseColour, Vector4f specularColour, float reflectance, Texture texture) {
         this.ambientColour = ambientColour;
         this.diffuseColour = diffuseColour;
         this.specularColour = specularColour;
-        this.reflectence = reflectence;
+        this.reflectance = reflectance;
         this.texture = texture;
     }
 
@@ -63,12 +71,12 @@ public class Material {
         this.specularColour = specularColour;
     }
 
-    public float getReflectence() {
-        return reflectence;
+    public float getReflectance() {
+        return reflectance;
     }
 
-    public void setReflectence(float reflectence) {
-        this.reflectence = reflectence;
+    public void setReflectance(float reflectance) {
+        this.reflectance = reflectance;
     }
 
     public Texture getTexture() {

@@ -4,28 +4,23 @@ import com.aas.core.Camera;
 import com.aas.core.ShaderManager;
 import com.aas.core.WindowManager;
 import com.aas.core.entity.Entity;
-import com.aas.core.entity.Model;
+import com.aas.core.entity.SceneManager;
 import com.aas.core.lighting.DirectionalLight;
 import com.aas.core.lighting.PointLight;
 import com.aas.core.lighting.SpotLight;
+import com.aas.core.entity.terrain.Terrain;
 import com.aas.core.utils.Contents;
-import com.aas.core.utils.Transformation;
-import com.aas.core.utils.Utils;
 import com.aas.test.Launcher;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class RenderManager {
 
     private final WindowManager window;
     private EntityRenderer entityRenderer;
+    private TerrainRenderer terrainRenderer;
 
     public RenderManager(){
         window = Launcher.getWindow();
@@ -33,13 +28,15 @@ public class RenderManager {
 
     public void init()throws Exception{
         entityRenderer = new EntityRenderer();
+        terrainRenderer = new TerrainRenderer();
 
         entityRenderer.init();
+        terrainRenderer.init();
     }
 
     public static void renderLight(PointLight[] pointLights, SpotLight[] spotLights,
                                    DirectionalLight directionalLight, ShaderManager shader){
-        shader.setUniform("ambientLight", Contents.AMBIENT_LIGHTS);
+        shader.setUniform("ambientLight", Contents.AMBIENT_LIGHT);
         shader.setUniform("specularPower", Contents.SPECULAR_POWER);
 
         int numLights = spotLights != null ? spotLights.length : 0;
@@ -54,7 +51,7 @@ public class RenderManager {
         shader.setUniform("directionalLight", directionalLight);
     }
 
-    public void render(Camera camera, DirectionalLight directionalLight, PointLight[] pointLights, SpotLight[] spotLights){
+    public void render(Camera camera, SceneManager scene){
         clear();
 
         if(window.isResize()){
@@ -62,7 +59,8 @@ public class RenderManager {
             window.setResize(false);
         }
 
-        entityRenderer.render(camera,pointLights,spotLights,directionalLight);
+        entityRenderer.render(camera,scene.getPointLights(), scene.getSpotLights(), scene.getDirectionalLight());
+        terrainRenderer.render(camera,scene.getPointLights(), scene.getSpotLights(), scene.getDirectionalLight());
 
     }
 
@@ -77,12 +75,17 @@ public class RenderManager {
         }
     }
 
+    public void processTerrain(Terrain terrain){
+        terrainRenderer.getTerrains().add(terrain);
+    }
+
     public void clear(){
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
     }
 
     public void cleanup(){
         entityRenderer.shader.cleanup();
+        terrainRenderer.shader.cleanup();
     }
 
 

@@ -1,7 +1,5 @@
 package com.aas.core.entity;
 
-import org.joml.Vector4f;
-
 public class Model {
     private int id;
     private int vertexCount;
@@ -46,8 +44,12 @@ public class Model {
         material.setTexture(texture);
     }
 
+    public void setMaterial(Material material) {
+        this.material = material;
+    }
+
     public void setTexture(Texture texture, float reflectance ) {
         this.material.setTexture(texture);
-        this.material.setReflectence(reflectance);
+        this.material.setReflectance(reflectance);
     }
 }
