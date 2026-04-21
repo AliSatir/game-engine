@@ -3,6 +3,7 @@ package com.aas.core;
 import com.aas.core.entity.Material;
 import com.aas.core.lighting.DirectionalLight;
 import com.aas.core.lighting.PointLight;
+import com.aas.core.lighting.SpotLight;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -59,6 +60,25 @@ public class ShaderManager {
         createUniform(uniformName + ".exponent");
     }
 
+    public void createSpotLightUniform(String uniformName)throws Exception{
+        createPointLightUniform(uniformName + ".pl");
+        createUniform(uniformName + ".conedir");
+        createUniform(uniformName + ".cutoff");
+    }
+
+    public void createPointLightListUniform(String uniformName, int size)throws Exception{
+        for(int i = 0; i < size; i++){
+            createPointLightUniform(uniformName + "[" + i + "]");
+
+        }
+    }public void createSpotLightListUniform(String uniformName, int size)throws Exception{
+        for(int i = 0; i < size; i++){
+            createSpotLightUniform(uniformName + "[" + i + "]");
+
+        }
+    }
+
+
     public void setUniform(String uniformName, Matrix4f value){
         try(MemoryStack stack = MemoryStack.stackPush()){
             GL20.glUniformMatrix4fv(uniforms.get(uniformName),false, value.get(stack.mallocFloat(16)));
@@ -111,6 +131,36 @@ public class ShaderManager {
         setUniform(uniformName + ".linear", pointLight.getLinear());
         setUniform(uniformName + ".exponent", pointLight.getExponent());
     }
+
+    public void setUniform(String uniformName, SpotLight spotLight){
+        setUniform(uniformName + ".pl", spotLight.getPointLight());
+        setUniform(uniformName + ".conedir", spotLight.getConeDirection());
+        setUniform(uniformName + ".cutoff", spotLight.getCutoff());
+    }
+
+    public void setUniform(String uniformName, PointLight[]  pointLights){
+        int numLight = pointLights != null ? pointLights.length : 0;
+        for(int i = 0; i < numLight; i++){
+            setUniform(uniformName, pointLights[i], i);
+        }
+    }
+
+    public void setUniform(String uniformName, PointLight  pointLight, int pos){
+        setUniform(uniformName + "[" + pos + "]" , pointLight);
+    }
+
+    public void setUniform(String uniformName, SpotLight[] spotLights){
+        int numLight = spotLights != null ? spotLights.length : 0;
+        for(int i = 0; i < numLight; i++){
+            setUniform(uniformName, spotLights[i], i);
+        }
+    }
+
+    public void setUniform(String uniformName, SpotLight  spotLight, int pos){
+        setUniform(uniformName + "[" + pos + "]" , spotLight);
+    }
+
+
 
     public void createVertexShader(String shaderCode)throws Exception{
         vertexShaderID = createShader(shaderCode, GL20.GL_VERTEX_SHADER);
