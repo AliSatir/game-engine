@@ -1,12 +1,17 @@
 package com.aas.core.utils;
 
 import com.aas.core.Camera;
+import com.aas.core.components.Transform;
 import com.aas.core.entity.Entity;
 import com.aas.core.entity.terrain.Terrain;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 public class Transformation {
+
+    public static Matrix4f createTransformationMatrix(Transform transform) {
+        return transform.getWorldMatrix();
+    }
 
     public static Matrix4f createTransformationMatrix(Entity entity){
         Matrix4f matrix = new Matrix4f();

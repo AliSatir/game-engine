@@ -29,11 +29,14 @@ public class ShaderManager {
 
     }
 
-    public void createUniform(String uniformName) throws Exception{
+    public void createUniform(String uniformName) throws Exception {
         int uniformLocation = GL20.glGetUniformLocation(programID, uniformName);
-        if(uniformLocation < 0)
-            throw new Exception("Could not find uniform "+ uniformName);
-        uniforms.put(uniformName, uniformLocation);
+        // Eğer değişken bulunamazsa hata fırlatma, sadece log bas veya geç
+        if (uniformLocation >= 0) {
+            uniforms.put(uniformName, uniformLocation);
+        } else {
+            System.out.println("Uyarı: Uniform bulunamadı veya silindi: " + uniformName);
+        }
     }
 
     public void createDirectionalLightUniform(String uniformName)throws Exception{
@@ -80,9 +83,11 @@ public class ShaderManager {
 
 
     public void setUniform(String uniformName, Matrix4f value){
-        try(MemoryStack stack = MemoryStack.stackPush()){
-            GL20.glUniformMatrix4fv(uniforms.get(uniformName),false, value.get(stack.mallocFloat(16)));
-
+        Integer location = uniforms.get(uniformName);
+        if (location != null) { // Eğer uniform yoksa hiçbir şey yapma ve çökme
+            try (MemoryStack stack = MemoryStack.stackPush()) {
+                GL20.glUniformMatrix4fv(location, false, value.get(stack.mallocFloat(16)));
+            }
         }
     }
 
@@ -113,7 +118,10 @@ public class ShaderManager {
         setUniform(uniformName + ".ambient", material.getAmbientColour());
         setUniform(uniformName + ".diffuse",  material.getDiffuseColour());
         setUniform(uniformName + ".specular",  material.getSpecularColour());
-        setUniform(uniformName + ".hasTexture",   material.hasTexture() ? 1 : 0);
+
+        int hasTex = material.hasTexture() ? 1 : 0;
+        setUniform(uniformName + ".hasTexture", hasTex);
+
         setUniform(uniformName + ".reflectance", material.getReflectance());
     }
 
@@ -159,7 +167,6 @@ public class ShaderManager {
     public void setUniform(String uniformName, SpotLight  spotLight, int pos){
         setUniform(uniformName + "[" + pos + "]" , spotLight);
     }
-
 
 
     public void createVertexShader(String shaderCode)throws Exception{

@@ -3,12 +3,14 @@
 const int MAX_POINT_LIGHTS = 5;
 const int MAX_SPOT_LIGHTS = 5;
 
-
 in vec2 fragTextureCoords;
 in vec3 fragNormal;
 in vec3 fragPos;
+in vec4 fragPosLightSpace;
 
 out vec4 fragColour;
+
+// --- STRUCT TANIMLAMALARI (Zorunlu) ---
 
 struct Material {
     vec4 ambient;
@@ -22,7 +24,6 @@ struct DirectionalLight {
     vec3 colour;
     vec3 direction;
     float intensity;
-
 };
 
 struct PointLight {
@@ -38,10 +39,12 @@ struct SpotLight {
     PointLight pl;
     vec3 conedir;
     float cutoff;
-
 };
 
+// --- UNIFORMLAR ---
+
 uniform sampler2D textureSampler;
+uniform sampler2D shadowMap;
 uniform vec3 ambientLight;
 uniform Material material;
 uniform float specularPower;
@@ -53,31 +56,46 @@ vec4 ambientC;
 vec4 diffuseC;
 vec4 specularC;
 
+// --- YARDIMCI FONKSİYONLAR ---
+
 void setupColours(Material material, vec2 textCoord) {
-    if(material.hasTexture == 1) {
+    if (material.hasTexture == 1) {
         ambientC = texture(textureSampler, textCoord);
         diffuseC = ambientC;
         specularC = ambientC;
-    }else{
+    } else {
         ambientC = material.ambient;
         diffuseC = material.diffuse;
         specularC = material.specular;
     }
 }
 
+float calculateShadow(vec4 fragPosLight) {
+    vec3 projCoords = fragPosLight.xyz / fragPosLight.w;
+    projCoords = projCoords * 0.5 + 0.5;
+
+    if(projCoords.z > 1.0) return 0.0;
+
+    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    float currentDepth = projCoords.z;
+
+    float bias = max(0.05 * (1.0 - dot(fragNormal, directionalLight.direction)), 0.005);
+    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+
+    return shadow;
+}
+
 vec4 calcLightColour(vec3 light_colour, float light_intensity, vec3 position, vec3 to_light_dir, vec3 normal) {
-    vec4 diffuseColour = vec4(0,0,0,0);
-    vec4 specColour = vec4(0,0,0,0);
+    vec4 diffuseColour = vec4(0, 0, 0, 0);
+    vec4 specColour = vec4(0, 0, 0, 0);
 
-    //diffuseLight
-    float diffuseFactor = max(dot(normal, to_light_dir),0.0);
-    diffuseColour = diffuseC * vec4(light_colour,1.0) * light_intensity * diffuseFactor;
+    float diffuseFactor = max(dot(normal, to_light_dir), 0.0);
+    diffuseColour = diffuseC * vec4(light_colour, 1.0) * light_intensity * diffuseFactor;
 
-    //specular colour
     vec3 camera_direction = normalize(-position);
     vec3 from_light_dir = -to_light_dir;
     vec3 reflectedLight = normalize(reflect(from_light_dir, normal));
-    float specularFactor = max(dot(camera_direction, reflectedLight),0.0);
+    float specularFactor = max(dot(camera_direction, reflectedLight), 0.0);
     specularFactor = pow(specularFactor, specularPower);
     specColour = specularC * light_intensity * specularFactor * material.reflectance * vec4(light_colour, 1.0);
 
@@ -89,7 +107,6 @@ vec4 calcPointLight(PointLight light, vec3 position, vec3 normal){
     vec3 to_light_dir = normalize(light_dir);
     vec4 light_colour = calcLightColour(light.colour, light.intensity, position, to_light_dir, normal);
 
-    //attenuation
     float distance = length(light_dir);
     float attenuationInv = light.constant + (light.linear * distance) + (light.exponent * distance * distance);
 
@@ -102,39 +119,40 @@ vec4 calcSpotLight(SpotLight light, vec3 position, vec3 normal){
     vec3 from_light_dir = -to_light_dir;
     float spot_alfa = dot(from_light_dir, normalize(light.conedir));
 
-    vec4 colour = vec4(0,0,0,0);
+    vec4 colour = vec4(0, 0, 0, 0);
 
-    if(spot_alfa > light.cutoff) {
+    if (spot_alfa > light.cutoff) {
         colour = calcPointLight(light.pl, position, normal);
         colour *= (1.0 - (1.0 - spot_alfa) / (1.0 - light.cutoff));
-
     }
-
     return colour;
-
 }
 
 vec4 calcDirectionalLight(DirectionalLight light, vec3 position, vec3 normal) {
-    return calcLightColour(light.colour, light.intensity, position, normalize(light.direction),normal);
+    return calcLightColour(light.colour, light.intensity, position, normalize(light.direction), normal);
 }
 
+// --- ANA DÖNGÜ ---
+
 void main() {
+    setupColours(material, fragTextureCoords);
 
-   setupColours(material, fragTextureCoords);
+    float shadow = calculateShadow(fragPosLightSpace);
 
-   vec4 diffuseSpeclarComp = calcDirectionalLight(directionalLight, fragPos, fragNormal);
+    vec4 diffuseSpeclarComp = calcDirectionalLight(directionalLight, fragPos, fragNormal);
+    diffuseSpeclarComp *= (1.0 - shadow);
 
-   for(int i = 0; i < MAX_POINT_LIGHTS; i++){
-        if(pointLights[i].intensity > 0){
-        diffuseSpeclarComp += calcPointLight(pointLights[i], fragPos, fragNormal);
+    for (int i = 0; i < MAX_POINT_LIGHTS; i++){
+        if (pointLights[i].intensity > 0){
+            diffuseSpeclarComp += calcPointLight(pointLights[i], fragPos, fragNormal);
         }
-   }
+    }
 
-  for(int i = 0; i < MAX_SPOT_LIGHTS; i++){
-      if(spotLights[i].pl.intensity > 0){
-        diffuseSpeclarComp += calcSpotLight(spotLights[i], fragPos, fragNormal);
+    for (int i = 0; i < MAX_SPOT_LIGHTS; i++){
+        if (spotLights[i].pl.intensity > 0){
+            diffuseSpeclarComp += calcSpotLight(spotLights[i], fragPos, fragNormal);
         }
-  }
+    }
 
-  fragColour = ambientC * vec4(ambientLight, 1) + diffuseSpeclarComp;
+    fragColour = ambientC * vec4(ambientLight, 1.0) + diffuseSpeclarComp;
 }

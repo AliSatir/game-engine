@@ -10,7 +10,10 @@ import com.aas.core.lighting.PointLight;
 import com.aas.core.lighting.SpotLight;
 import com.aas.core.entity.terrain.Terrain;
 import com.aas.core.utils.Contents;
+import com.aas.core.utils.Utils;
 import com.aas.test.Launcher;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
@@ -21,6 +24,8 @@ public class RenderManager {
     private final WindowManager window;
     private EntityRenderer entityRenderer;
     private TerrainRenderer terrainRenderer;
+    private ShadowMap shadowMap;
+    private ShaderManager shadowMapShader;
 
     public RenderManager(){
         window = Launcher.getWindow();
@@ -29,9 +34,25 @@ public class RenderManager {
     public void init()throws Exception{
         entityRenderer = new EntityRenderer();
         terrainRenderer = new TerrainRenderer();
+        shadowMap = new ShadowMap();
+
 
         entityRenderer.init();
         terrainRenderer.init();
+        shadowMap.init();
+
+        // Shadow Map Shader Hazırlığı
+        shadowMapShader = new ShaderManager();
+        // Bu shader'lar çok basit olmalı (Sadece pozisyon ve matris)
+        shadowMapShader.createVertexShader(Utils.loadResource("/shaders/shadow_vertex.vs"));
+        shadowMapShader.createFragmentShader(Utils.loadResource("/shaders/shadow_fragment.fs"));
+        shadowMapShader.link();
+
+        // Sadece bu iki uniform yeterli, çünkü renk/ışık hesaplamıyoruz
+        shadowMapShader.createUniform("projectionMatrix"); // Bu aslında lightSpaceMatrix olacak
+        shadowMapShader.createUniform("transformationMatrix"); // Modelin dünyadaki yeri
+
+        shadowMap.init();
     }
 
     public static void renderLight(PointLight[] pointLights, SpotLight[] spotLights,
@@ -52,16 +73,56 @@ public class RenderManager {
     }
 
     public void render(Camera camera, SceneManager scene){
-        clear();
+        // 1. Önce matrisi hesapla
+        Matrix4f lightSpaceMatrix = updateLightSpaceMatrix(scene.getDirectionalLight());
 
+        // --- 1. AŞAMA: Shadow Pass ---
+        shadowMap.bind();
+        GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
+        entityRenderer.renderShadows(lightSpaceMatrix, shadowMapShader);
+        shadowMap.unbind();
+
+        // --- KRİTİK DÜZELTME BURADA ---
+        // Gölge çizimi bittiği anda Viewport'u HER KAREDE pencere boyutuna geri çekmelisin.
+        // Sadece resize olduğunda değil, her karede!
+        GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
+
+        // window.isResize kontrolünü yine de tutabilirsin ama viewport yukarıdaki gibi dışarıda olmalı.
         if(window.isResize()){
-            GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
             window.setResize(false);
         }
 
-        entityRenderer.render(camera,scene.getPointLights(), scene.getSpotLights(), scene.getDirectionalLight());
-        terrainRenderer.render(camera,scene.getPointLights(), scene.getSpotLights(), scene.getDirectionalLight());
+        // Ekranı temizle (Gölge pass'ten sonra temizlenmiş olması gerekir)
+        clear();
 
+        // --- 2. AŞAMA: Sahne Çizimi ---
+        entityRenderer.render(camera, scene.getPointLights(), scene.getSpotLights(),
+                scene.getDirectionalLight(), shadowMap.getDepthMapTexture(), lightSpaceMatrix);
+
+        // TerrainRenderer'ı da (eğer shader'ını güncellediysen) benzer şekilde çağırmayı unutma
+        terrainRenderer.render(camera, scene.getPointLights(), scene.getSpotLights(), scene.getDirectionalLight());
+    }
+
+    private Matrix4f updateLightSpaceMatrix(DirectionalLight light) {
+        // 1. Projeksiyon: Işığın ne kadarlık bir alanı "gördüğünü" belirler.
+        // Değerleri sahnenin büyüklüğüne göre ayarlayabilirsin.
+        // (left, right, bottom, top, near, far)
+        float nearPlane = 1.0f, farPlane = 20.0f;
+        Matrix4f lightProjection = new Matrix4f().ortho(-15.0f, 15.0f, -15.0f, 15.0f, nearPlane, farPlane);
+
+        // 2. View: Işığın pozisyonu ve baktığı yön.
+        // Işığın yönünü tersine çevirerek bir "pozisyon" simüle ediyoruz.
+        Vector3f lightDirection = new Vector3f(light.getDirection());
+        Vector3f lightPos = new Vector3f(lightDirection).mul(-10.0f); // Işığı uzağa yerleştir
+
+        Matrix4f lightView = new Matrix4f().lookAt(
+                lightPos,                    // Işığın konumu
+                new Vector3f(0, 0, 0),        // Baktığı nokta (Sahnenin merkezi)
+                new Vector3f(0, 1, 0)         // Yukarı yönü
+        );
+
+        // 3. Light Space Matrix = Projection * View
+        return lightProjection.mul(lightView);
     }
 
     public void processEntities(Entity entity){
@@ -88,6 +149,15 @@ public class RenderManager {
         terrainRenderer.shader.cleanup();
     }
 
+    public WindowManager getWindow() {
+        return window;
+    }
 
+    public EntityRenderer getEntityRenderer() {
+        return entityRenderer;
+    }
 
+    public TerrainRenderer getTerrainRenderer() {
+        return terrainRenderer;
+    }
 }

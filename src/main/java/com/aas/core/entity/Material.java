@@ -7,6 +7,7 @@ public class Material {
     private Vector4f ambientColour, diffuseColour, specularColour;
     private float reflectance;
     private Texture texture;
+    private int hasTexture = 0;
 
     public Material(){
         this.ambientColour = Contents.DEFAULT_COLOR;
@@ -30,6 +31,7 @@ public class Material {
         this.specularColour = Contents.DEFAULT_COLOR;
         this.texture = texture;
         this.reflectance = 0;
+        this.hasTexture = (texture != null) ? 1 : 0;
     }
     public Material(Texture texture, float reflectance){
         this.ambientColour = Contents.DEFAULT_COLOR;
@@ -90,4 +92,13 @@ public class Material {
     public boolean hasTexture() {
         return this.texture != null;
     }
+
+    public int getHasTexture() {
+        return this.hasTexture;
+    }
+
+    public void setHasTexture(int hasTexture) {
+        this.hasTexture = hasTexture;
+    }
+
 }

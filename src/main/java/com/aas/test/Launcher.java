@@ -11,8 +11,6 @@ public class Launcher {
 
 
     public static void main(String[] args) {
-
-
         window = new WindowManager(Contents.TITLE, 1360,720,false);
         game = new TestGame();
         EngineManager engine = new EngineManager();

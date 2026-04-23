@@ -5,12 +5,16 @@ import com.aas.core.entity.Model;
 import com.aas.core.lighting.DirectionalLight;
 import com.aas.core.lighting.PointLight;
 import com.aas.core.lighting.SpotLight;
+import org.joml.Matrix4f;
 
 public interface IRenderer<T> {
 
     public void init() throws Exception;
     public void render(Camera camera, PointLight[] pointLights, SpotLight[] spotLights,
-                       DirectionalLight directionalLight) throws Exception;
+                       DirectionalLight directionalLight, int shadowTexture, Matrix4f lightSpaceMatrix) throws Exception;
+
+    public void render(Camera camera, PointLight[] pointLights, SpotLight[] spotLights,
+                       DirectionalLight directionalLight);
 
     abstract void bind(Model model);
 

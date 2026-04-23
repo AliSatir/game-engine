@@ -11,6 +11,7 @@ import com.aas.core.utils.Contents;
 import com.aas.core.utils.Transformation;
 import com.aas.core.utils.Utils;
 import com.aas.test.Launcher;
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -44,6 +45,11 @@ public class TerrainRenderer implements IRenderer{
         shader.createDirectionalLightUniform("directionalLight");
         shader.createPointLightListUniform("pointLights", Contents.MAX_POINT_LIGHTS);
         shader.createSpotLightListUniform("spotLights", Contents.MAX_SPOT_LIGHTS);
+    }
+
+    @Override
+    public void render(Camera camera, PointLight[] pointLights, SpotLight[] spotLights, DirectionalLight directionalLight, int shadowTexture, Matrix4f lightSpaceMatrix) throws Exception {
+
     }
 
     @Override

@@ -1,13 +1,21 @@
 package com.aas.test;
 
 import com.aas.core.*;
+import com.aas.core.components.BoxCollider;
+import com.aas.core.components.MeshRenderer;
+import com.aas.core.components.Rigidbody;
+import com.aas.core.components.Transform;
+import com.aas.core.ecs.GameObject;
 import com.aas.core.entity.*;
 import com.aas.core.lighting.DirectionalLight;
 import com.aas.core.lighting.PointLight;
 import com.aas.core.lighting.SpotLight;
+import com.aas.core.physics.PhysicsSystem;
 import com.aas.core.rendering.RenderManager;
 import com.aas.core.entity.terrain.Terrain;
+import com.aas.core.scripts_test.PlayerController;
 import com.aas.core.utils.Contents;
+import com.aas.core.utils.Prefab;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
@@ -28,6 +36,8 @@ public class TestGame implements ILogic {
     private Camera camera;
     Vector3f cameraInk;
 
+    private PhysicsSystem physicsSystem;
+
     public TestGame(){
         renderer = new RenderManager();
         window = Launcher.getWindow();
@@ -35,6 +45,9 @@ public class TestGame implements ILogic {
         camera = new Camera();
         cameraInk = new Vector3f(0,0,0);
         sceneManager = new SceneManager(-90);
+
+        physicsSystem = new PhysicsSystem();
+
     }
 
 
@@ -42,25 +55,43 @@ public class TestGame implements ILogic {
     public void init() throws Exception {
         renderer.init();
 
-        Model model = loader.loadOBJModel("/models/cube.obj");
-        model.setTexture(new Texture(loader.loadTexture("textures/blue.jpg")),1f);
+        Model coolLemon = ModelLoader.loadGLB("/models/CoolLemon.glb",loader);
+       // Model battery = ModelLoader.loadGLB("/models/Battery.glb",loader);
 
+//        GameObject lemonMan = new GameObject("lemonMan");
+//        lemonMan.addComponent(new Transform(new Vector3f(0,3,-5), new Vector3f(0,0,0),100.0f));
+//        lemonMan.addComponent(new MeshRenderer(coolLemon));
+//        lemonMan.addComponent(new Rigidbody());
+//        lemonMan.addComponent(new BoxCollider(new Vector3f(1,0.001f,1)));
+//        lemonMan.addComponent(new PlayerController(window));
 
-        Terrain terrain = new Terrain(new Vector3f(0, -1, -800),loader,new Material(new Texture(loader.loadTexture("textures/blue.jpg")), 0.1f));
-        Terrain terrain2 = new Terrain(new Vector3f(-800, -1, -800),loader,new Material(new Texture(loader.loadTexture("textures/crate_1.jpg")), 0.1f));
+//        Vector3f rotation = lemonMan.getComponent(Transform.class).rotation;
+//        float scale = lemonMan.getComponent(Transform.class).scale;
+
+        for(int i = 0; i < 1; i++ ){
+            float x = 0f;
+            float y = 5 + 2;
+            float z = -10f;
+            GameObject clone = Prefab.createLimonMan(coolLemon, new Vector3f(x,y,z));
+            sceneManager.addObjects(clone);
+        }
+
+//        GameObject battery1 = new GameObject("battery1");
+//        Transform transform = new Transform(new Vector3f(0,0.03f,0), new Vector3f(0,0,0),1.0f);
+//        battery1.addComponent(transform);
+//        battery1.addComponent(new MeshRenderer(battery));
+//        transform.setParent(lemonMan.getComponent(Transform.class));
+//        sceneManager.addObjects(battery1);
+
+        GameObject ground = new GameObject("ground");
+        ground.addComponent(new Transform(new Vector3f(0,0,0), new Vector3f(0,0,0),100.0f));
+        ground.addComponent(new BoxCollider(new Vector3f(100,0.001f,100)));
+        sceneManager.addObjects(ground);
+
+        Terrain terrain = new Terrain(new Vector3f(0, -1, -800),loader,new Material(new Texture(loader.loadTexture("textures/crate_1.jpg")), 0.001f));
+        Terrain terrain2 = new Terrain(new Vector3f(-800, -1, -800),loader,new Material(new Texture(loader.loadTexture("textures/crate_1.jpg")), 0.001f));
         sceneManager.addTerrain(terrain);
         sceneManager.addTerrain(terrain2);
-
-
-        Random rnd = new Random();
-        for(int i = 0; i < 2000; i++){
-            float x = rnd.nextFloat() * 800;
-            float z = rnd.nextFloat() * -800;
-            sceneManager.addEntity(new Entity(model, new Vector3f(x,2, z),
-                    new Vector3f(0,0, 0),1));
-        }
-        sceneManager.addEntity(new Entity(model, new Vector3f(0,2, -5),
-                new Vector3f(0,0,0),1));
 
         float lightIntensity = 1.0f;
 
@@ -74,22 +105,22 @@ public class TestGame implements ILogic {
         float cutoff = (float) Math.cos(Math.toRadians(140));
         lightIntensity = 50000f;
         SpotLight spotLight = new SpotLight(new PointLight(new Vector3f(0.25f,0f,0), new Vector3f(1f,50f, -5f),
-                lightIntensity, 0,0,0.02f),coneDir, cutoff);
+                lightIntensity, 1.0f, 0.01f, 0.002f),coneDir, cutoff);
         //spot light
         coneDir = new Vector3f(0,-50,0);
         cutoff = (float) Math.cos(Math.toRadians(140));
-        lightIntensity = 50000f;
+
         SpotLight spotLight1 = new SpotLight(new PointLight(new Vector3f(0,0.25f,0), new Vector3f(1f,50f, -5f),
-                lightIntensity, 0,0,0.02f),coneDir, cutoff);
+                lightIntensity, 1.0f, 0.01f, 0.002f),coneDir, cutoff);
 
 
         //directional light
         lightPos = new Vector3f(-1,0,0);
         lightColor = new Vector3f(1,1,1);
-        sceneManager.setDirectionalLight(new DirectionalLight(lightColor, lightPos, lightIntensity));
+        sceneManager.setDirectionalLight(new DirectionalLight(lightColor, lightPos, 1f));
 
-        sceneManager.setPointLights(new PointLight[]{pointLight});
-        sceneManager.setSpotLights(new SpotLight[]{spotLight,spotLight1});
+        //sceneManager.setPointLights(new PointLight[]{pointLight});
+        //sceneManager.setSpotLights(new SpotLight[]{spotLight,spotLight1});
     }
 
     @Override
@@ -108,12 +139,13 @@ public class TestGame implements ILogic {
        if(window.isKeyPressed(GLFW.GLFW_KEY_X))
            cameraInk.y = 1;
 
-       float lightPos = sceneManager.getSpotLights()[0].getPointLight().getPosition().z;
+
+       /*float lightPos = sceneManager.getSpotLights()[0].getPointLight().getPosition().z;
        if(window.isKeyPressed(GLFW.GLFW_KEY_N)){
            sceneManager.getSpotLights()[0].getPointLight().getPosition().z = lightPos + 0.1f;
        }if(window.isKeyPressed(GLFW.GLFW_KEY_M)){
             sceneManager.getSpotLights()[0].getPointLight().getPosition().z = lightPos - 0.1f;
-       }
+       }*/
 
     }
 
@@ -136,11 +168,13 @@ public class TestGame implements ILogic {
             sceneManager.setSpotInc(-1);
 
         double spotAngleRad = Math.toRadians(sceneManager.getSpotAnle());
-        Vector3f coneDir = sceneManager.getSpotLights()[0].getPointLight().getPosition();
-        coneDir.x = (float) Math.sin(spotAngleRad);
+        //Vector3f coneDir = sceneManager.getSpotLights()[0].getPointLight().getPosition();
+        //coneDir.x = (float) Math.sin(spotAngleRad);
 
-        coneDir = sceneManager.getSpotLights()[1].getPointLight().getPosition();
-        coneDir.z = (float) Math.cos(spotAngleRad * 0.15);
+  //      coneDir = sceneManager.getSpotLights()[1].getPointLight().getPosition();
+//        coneDir.z = (float) Math.cos(spotAngleRad * 0.15);
+
+
 
         sceneManager.incLightAngle(1.1f);
         if(sceneManager.getLightAnle() > 90) {
@@ -162,11 +196,18 @@ public class TestGame implements ILogic {
         sceneManager.getDirectionalLight().getDirection().x = (float) Math.sin(angRad);
         sceneManager.getDirectionalLight().getDirection().y = (float) Math.cos(angRad);
 
-        for(Entity entity : sceneManager.getEntities()){
-            renderer.processEntities(entity);
+        physicsSystem.update(sceneManager.getObjects(),interval);
+        for(GameObject obj : sceneManager.getObjects()) {
+            renderer.getEntityRenderer().processGameObject(obj);
+            obj.update(interval);
         }
+
+
         for(Terrain terrain : sceneManager.getTerrains()){
             renderer.processTerrain(terrain);
+        }
+        for (GameObject object : sceneManager.getObjects()) {
+            renderer.getEntityRenderer().processGameObject(object);
         }
     }
 

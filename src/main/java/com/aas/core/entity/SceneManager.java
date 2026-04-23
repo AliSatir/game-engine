@@ -1,5 +1,6 @@
 package com.aas.core.entity;
 
+import com.aas.core.ecs.GameObject;
 import com.aas.core.entity.terrain.Terrain;
 import com.aas.core.lighting.DirectionalLight;
 import com.aas.core.lighting.PointLight;
@@ -13,6 +14,7 @@ import java.util.List;
 public class SceneManager {
     private List<Entity> entities;
     private List<Terrain> terrains;
+    private List<GameObject> objects;
 
     private Vector3f ambientLight;
     private SpotLight[] spotLights;
@@ -23,6 +25,7 @@ public class SceneManager {
     public SceneManager(float lightAnle) {
         entities = new ArrayList<>();
         terrains = new ArrayList<>();
+        objects = new ArrayList<>();
         ambientLight = Contents.AMBIENT_LIGHT;
         this.lightAnle = lightAnle;
     }
@@ -118,5 +121,12 @@ public class SceneManager {
 
     public void setDirectionalLight(DirectionalLight directionalLight) {
         this.directionalLight = directionalLight;
+    }
+
+    public List<GameObject> getObjects() {
+        return objects;
+    }
+    public void addObjects(GameObject objects) {
+        this.objects.add(objects);
     }
 }//class
