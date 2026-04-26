@@ -1,6 +1,7 @@
 package com.aas.core.components;
 
 import com.aas.core.ecs.Component;
+import com.aas.core.entity.Model;
 import org.joml.Vector3f;
 
 public class BoxCollider extends Component {
@@ -12,15 +13,37 @@ public class BoxCollider extends Component {
         this.offset = new Vector3f(0, 0, 0);
     }
 
+    // Yeni otomatik constructor
+    public BoxCollider(Model model) {
+        Vector3f min = model.getMinBound();
+        Vector3f max = model.getMaxBound();
+
+        // Boyut = Max - Min (Örneğin max=1, min=-1 ise boyut 2 olur)
+        this.size = new Vector3f(max).sub(min);
+
+        // Eğer modelin merkezi (0,0,0) değilse (örneğin ayaklarından pivotlanmışsa)
+        // Offset değerini modelin merkezine kaydırıyoruz.
+        this.offset = model.getCenter();
+    }
+
     // Kutunun dünyadaki en küçük ve en büyük noktalarını hesaplar
     public Vector3f getMin() {
         Transform t = gameObject.getComponent(Transform.class);
-        return new Vector3f(t.position).add(offset).sub(new Vector3f(size).mul(0.5f));
+        // Boyutu scale ile çarpıp merkeze göre yarı çapını buluyoruz
+        float halfX = (size.x * t.scale)*0.5f;
+        float halfY = (size.y * t.scale)*0.5f;
+        float halfZ = (size.z * t.scale)*0.5f;
+
+        return new Vector3f(t.position).add(offset).sub(halfX, halfY, halfZ);
     }
 
     public Vector3f getMax() {
         Transform t = gameObject.getComponent(Transform.class);
-        return new Vector3f(t.position).add(offset).add(new Vector3f(size).mul(0.5f));
+        float halfX = (size.x * t.scale)*0.5f;
+        float halfY = (size.y * t.scale)*0.5f;
+        float halfZ = (size.z * t.scale)*0.5f;
+
+        return new Vector3f(t.position).add(offset).add(halfX, halfY, halfZ);
     }
 
     @Override public void start() {}

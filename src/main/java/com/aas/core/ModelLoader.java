@@ -8,12 +8,13 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ModelLoader {
 
     public static Model loadGLB(String fileName, ObjectLoader loader) throws Exception {
         // 1. Dosyanın sistem yolunu al
-        String resourcePath = ModelLoader.class.getResource(fileName).getPath();
+        String resourcePath = Objects.requireNonNull(ModelLoader.class.getResource(fileName)).getPath();
 
         // 2. Assimp ile import et
         AIScene aiScene = Assimp.aiImportFile(resourcePath,
@@ -121,6 +122,7 @@ public class ModelLoader {
         for (int i = 0; i < list.size(); i++) array[i] = list.get(i);
         return array;
     }
+
     private static int loadEmbeddedTexture(AIScene aiScene, AIMaterial aiMaterial, ObjectLoader loader) throws Exception {
         AIString path = AIString.calloc();
         // Diffuse (Renk) dokusunun yolunu/indisini alıyoruz
@@ -132,7 +134,7 @@ public class ModelLoader {
             // Eğer doku dosyanın içine gömülüyse, yol "*" ile başlar (örn: *0, *1)
             if (texturePath.startsWith("*")) {
                 int textureIndex = Integer.parseInt(texturePath.substring(1));
-                AITexture aiTexture = AITexture.create(aiScene.mTextures().get(textureIndex));
+                AITexture aiTexture = AITexture.create(Objects.requireNonNull(aiScene.mTextures()).get(textureIndex));
 
                 // Gömülü veriyi (png/jpg) ByteBuffer olarak al
                 ByteBuffer textureBuffer = aiTexture.pcDataCompressed();

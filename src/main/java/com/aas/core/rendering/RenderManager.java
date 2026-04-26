@@ -26,6 +26,9 @@ public class RenderManager {
     private TerrainRenderer terrainRenderer;
     private ShadowMap shadowMap;
     private ShaderManager shadowMapShader;
+    private PhysicsDebugRenderer physicsDebugRenderer;
+
+    public static boolean SHOW_COLLIDERS = true;
 
     public RenderManager(){
         window = Launcher.getWindow();
@@ -34,11 +37,13 @@ public class RenderManager {
     public void init()throws Exception{
         entityRenderer = new EntityRenderer();
         terrainRenderer = new TerrainRenderer();
+        physicsDebugRenderer = new PhysicsDebugRenderer();
         shadowMap = new ShadowMap();
 
 
         entityRenderer.init();
         terrainRenderer.init();
+        physicsDebugRenderer.init();
         shadowMap.init();
 
         // Shadow Map Shader Hazırlığı
@@ -101,6 +106,10 @@ public class RenderManager {
 
         // TerrainRenderer'ı da (eğer shader'ını güncellediysen) benzer şekilde çağırmayı unutma
         terrainRenderer.render(camera, scene.getPointLights(), scene.getSpotLights(), scene.getDirectionalLight());
+
+        if(SHOW_COLLIDERS)
+            physicsDebugRenderer.render(camera,window.getProjectionMatrix(),scene.getObjects());
+
     }
 
     private Matrix4f updateLightSpaceMatrix(DirectionalLight light) {
@@ -147,6 +156,7 @@ public class RenderManager {
     public void cleanup(){
         entityRenderer.shader.cleanup();
         terrainRenderer.shader.cleanup();
+        physicsDebugRenderer.cleanup();
     }
 
     public WindowManager getWindow() {

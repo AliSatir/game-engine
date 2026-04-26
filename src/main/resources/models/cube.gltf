@@ -1,0 +1,78 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "Handcoded for Physics Testing"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [0]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1
+          },
+          "indices": 2,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC3",
+      "max": [0.5, 0.5, 0.5],
+      "min": [-0.5, -0.5, -0.5]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5123,
+      "count": 36,
+      "type": "SCALAR"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 288,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 288,
+      "byteLength": 288,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 576,
+      "byteLength": 72,
+      "target": 34963
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 648,
+      "uri": "data:application/octet-stream;base64,AAAAvwAAAL8AAAC/AAAAvwAAAL8AAACfAAAAvwAAAL8AAACfAAAAvwAAAL8AAAC/AACAfwAAAL8AAAC/AACAfwAAAL8AAACfAACAfwAAAL8AAACfAACAfwAAAL8AAAC/AAAAvwAAAL8AAAC/AAAAvwAAAL8AAACfAACAfwAAAL8AAACfAACAfwAAAL8AAAC/AACAfwAAAL8AAAC/AACAfwAAAL8AAACfAACAfwAAAL8AAACfAAAAvwAAAL8AAACfAAAAvwAAAL8AAAC/AACAfwAAAL8AAAC/AACAfwAAAL8AAACfAACAfwAAAL8AAACfAACAfwAAAL8AAAC/AACAfwAAAL8AAACfAAAAvwAAAL8AAACfAAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAgL8AAAAAAAAAAAAAAAAAAIC/AAAAAAAAAAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAEAAgAAAQADAAUABgAEAAUABwAEAAgACQAKAAgACwAKAAwADQAOAAwADwAOABAAEQASABAAExASABQAFQAWABQAFwAW"
+    }
+  ]
+}

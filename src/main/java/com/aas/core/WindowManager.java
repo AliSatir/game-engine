@@ -13,7 +13,7 @@ public class WindowManager {
     public static final float Z_NEAR = 0.01f;
     public static final float Z_FAR = 1000f;
 
-    private String title;
+    private final String title;
 
     private int width, height;
     private long window;

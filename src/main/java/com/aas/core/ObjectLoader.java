@@ -91,21 +91,35 @@ public class ObjectLoader {
 
                 // Verileri listeye ekle
                 Vector3f v = vertices.get(face.x);
-                verticesList.add(v.x); verticesList.add(v.y); verticesList.add(v.z);
+                verticesList.add(v.x);
+                verticesList.add(v.y);
+                verticesList.add(v.z);
 
-                if (face.y >= 0) {
+                // --- TEXTURE (Güvenli kontrol) ---
+                // face.y >= 0 ve textures listesinin boyutundan küçük olmalı
+                if (face.y >= 0 && face.y < textures.size()) {
                     Vector2f vt = textures.get(face.y);
-                    texturesList.add(vt.x); texturesList.add(1 - vt.y);
+                    texturesList.add(vt.x);
+                    texturesList.add(1 - vt.y);
                 } else {
-                    texturesList.add(0f); texturesList.add(0f);
+                    // Eğer doku koordinatı yoksa veya hatalıysa 0,0 ekle
+                    texturesList.add(0f);
+                    texturesList.add(0f);
                 }
 
-                if (face.z >= 0) {
+                // --- NORMAL (Güvenli kontrol) ---
+                if (face.z >= 0 && face.z < normals.size()) {
                     Vector3f vn = normals.get(face.z);
-                    normalsList.add(vn.x); normalsList.add(vn.y); normalsList.add(vn.z);
+                    normalsList.add(vn.x);
+                    normalsList.add(vn.y);
+                    normalsList.add(vn.z);
                 } else {
-                    normalsList.add(0f); normalsList.add(0f); normalsList.add(0f);
+                    // Eğer normal yoksa yukarı bakan varsayılan bir değer ekle
+                    normalsList.add(0f);
+                    normalsList.add(1f);
+                    normalsList.add(0f);
                 }
+
             } else {
                 // Bu köşe daha önce işlendi, sadece indexini ekle
                 indicesList.add(uniqueNodes.get(key));
@@ -114,17 +128,37 @@ public class ObjectLoader {
 
         // Listeleri ilkel dizilere (float[]) çeviriyoruz
         float[] vArr = new float[verticesList.size()];
-        for(int i=0; i<verticesList.size(); i++) vArr[i] = verticesList.get(i);
+        for (int i = 0; i < verticesList.size(); i++) vArr[i] = verticesList.get(i);
 
         float[] tArr = new float[texturesList.size()];
-        for(int i=0; i<texturesList.size(); i++) tArr[i] = texturesList.get(i);
+        for (int i = 0; i < texturesList.size(); i++) tArr[i] = texturesList.get(i);
 
         float[] nArr = new float[normalsList.size()];
-        for(int i=0; i<normalsList.size(); i++) nArr[i] = normalsList.get(i);
+        for (int i = 0; i < normalsList.size(); i++) nArr[i] = normalsList.get(i);
 
         int[] iArr = indicesList.stream().mapToInt(Integer::intValue).toArray();
 
-        return loadModel(vArr, tArr, nArr, iArr);
+        Vector3f minBound = new Vector3f(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
+        Vector3f maxBound = new Vector3f(-Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE);
+
+    // Modelin tüm köşelerini gezerek en uç noktaları bul
+        for (Vector3f v : vertices) {
+            minBound.x = Math.min(minBound.x, v.x);
+            minBound.y = Math.min(minBound.y, v.y);
+            minBound.z = Math.min(minBound.z, v.z);
+
+            maxBound.x = Math.max(maxBound.x, v.x);
+            maxBound.y = Math.max(maxBound.y, v.y);
+            maxBound.z = Math.max(maxBound.z, v.z);
+        }
+
+    // Modeli oluştur
+        Model model = loadModel(vArr, tArr, nArr, iArr);
+
+    // Hesapladığımız sınırları modele kaydet
+        model.setBounds(minBound, maxBound);
+
+        return model;
     }
 
     private static void processVertex(int pos, int texCoord, int normal, List<Vector2f> texCoordList,
@@ -224,7 +258,7 @@ public class ObjectLoader {
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-        //
+
 
         GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
         GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, // GL_RGB yerine GL_RGBA
@@ -234,6 +268,7 @@ public class ObjectLoader {
         return id;
 
     }
+
     public int loadTextureFromMemory(ByteBuffer buffer) throws Exception {
         int width, height, channels;
         ByteBuffer imageBuffer;

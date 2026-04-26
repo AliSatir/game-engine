@@ -1,10 +1,7 @@
 package com.aas.test;
 
 import com.aas.core.*;
-import com.aas.core.components.BoxCollider;
-import com.aas.core.components.MeshRenderer;
-import com.aas.core.components.Rigidbody;
-import com.aas.core.components.Transform;
+import com.aas.core.components.*;
 import com.aas.core.ecs.GameObject;
 import com.aas.core.entity.*;
 import com.aas.core.lighting.DirectionalLight;
@@ -55,8 +52,8 @@ public class TestGame implements ILogic {
     public void init() throws Exception {
         renderer.init();
 
-        Model coolLemon = ModelLoader.loadGLB("/models/CoolLemon.glb",loader);
-       // Model battery = ModelLoader.loadGLB("/models/Battery.glb",loader);
+      //  Model coolLemon = ModelLoader.loadGLB("/models/CoolLemon.glb",loader);
+      //  Model battery = ModelLoader.loadGLB("/models/Battery.glb",loader);
 
 //        GameObject lemonMan = new GameObject("lemonMan");
 //        lemonMan.addComponent(new Transform(new Vector3f(0,3,-5), new Vector3f(0,0,0),100.0f));
@@ -68,13 +65,39 @@ public class TestGame implements ILogic {
 //        Vector3f rotation = lemonMan.getComponent(Transform.class).rotation;
 //        float scale = lemonMan.getComponent(Transform.class).scale;
 
-        for(int i = 0; i < 1; i++ ){
-            float x = 0f;
-            float y = 5 + 2;
-            float z = -10f;
-            GameObject clone = Prefab.createLimonMan(coolLemon, new Vector3f(x,y,z));
-            sceneManager.addObjects(clone);
-        }
+//        for(int i = 0; i < 1; i++ ){
+//            float x = 0f;
+//            float y = 5;
+//            float z = 0f;
+//            GameObject clone = Prefab.createLimonMan(coolLemon, new Vector3f(x,y,z));
+//            sceneManager.addObjects(clone);
+//        }
+
+        Model cube = loader.loadOBJModel("/models/cube.obj");
+        cube.setMaterial(new Material(new Texture(loader.loadTexture("textures/crate_1.jpg")), 1f));
+
+        GameObject ground = new GameObject("ground");
+        ground.addComponent(new Transform(new Vector3f(0,0,0),new Vector3f(0,0,0), 2f));
+        ground.addComponent(new MeshRenderer(cube));
+        ground.addComponent(new BoxCollider(cube));
+        sceneManager.addObjects(ground);
+
+        GameObject cube1 = new GameObject("cube1");
+        cube1.addComponent(new Transform(new Vector3f(0,5,0),new Vector3f(0,0,0), 1f));
+        cube1.addComponent(new MeshRenderer(cube));
+        cube1.addComponent(new Rigidbody());
+        cube1.addComponent(new BoxCollider(cube));
+        sceneManager.addObjects(cube1);
+
+        Model sphereModel =  ModelLoader.loadGLB("/models/spheres.glb",loader);
+
+        GameObject sphere =  new GameObject("sphere");
+        sphere.addComponent(new Transform(new Vector3f(0,10,0),new Vector3f(0,0,0), 3f));
+        sphere.addComponent(new MeshRenderer(sphereModel));
+        sphere.addComponent(new SphereCollider(sphereModel));
+        sphere.addComponent(new Rigidbody());
+        sceneManager.addObjects(sphere);
+
 
 //        GameObject battery1 = new GameObject("battery1");
 //        Transform transform = new Transform(new Vector3f(0,0.03f,0), new Vector3f(0,0,0),1.0f);
@@ -83,15 +106,16 @@ public class TestGame implements ILogic {
 //        transform.setParent(lemonMan.getComponent(Transform.class));
 //        sceneManager.addObjects(battery1);
 
-        GameObject ground = new GameObject("ground");
-        ground.addComponent(new Transform(new Vector3f(0,0,0), new Vector3f(0,0,0),100.0f));
-        ground.addComponent(new BoxCollider(new Vector3f(100,0.001f,100)));
-        sceneManager.addObjects(ground);
-
-        Terrain terrain = new Terrain(new Vector3f(0, -1, -800),loader,new Material(new Texture(loader.loadTexture("textures/crate_1.jpg")), 0.001f));
-        Terrain terrain2 = new Terrain(new Vector3f(-800, -1, -800),loader,new Material(new Texture(loader.loadTexture("textures/crate_1.jpg")), 0.001f));
-        sceneManager.addTerrain(terrain);
-        sceneManager.addTerrain(terrain2);
+//        GameObject ground = new GameObject("ground");
+//        ground.addComponent(new Transform(new Vector3f(-10,-1f,-10), new Vector3f(0,0,0),1.0f));
+//        ground.addComponent(new BoxCollider(new Vector3f(100,1f,100)));
+//
+//        Terrain terrain = new Terrain(new Vector3f(0, -1, 0),loader,new Material(new Texture(loader.loadTexture("textures/crate_1.jpg")), 0.001f));
+//        //Terrain terrain2 = new Terrain(new Vector3f(-800, -1, -800),loader,new Material(new Texture(loader.loadTexture("textures/crate_1.jpg")), 0.001f));
+//
+//        //sceneManager.addTerrain(terrain2);
+//        ground.addComponent(new MeshRenderer(terrain.getModel()));
+//        sceneManager.addObjects(ground);
 
         float lightIntensity = 1.0f;
 
@@ -115,7 +139,7 @@ public class TestGame implements ILogic {
 
 
         //directional light
-        lightPos = new Vector3f(-1,0,0);
+        lightPos = new Vector3f( -10,1000,0);
         lightColor = new Vector3f(1,1,1);
         sceneManager.setDirectionalLight(new DirectionalLight(lightColor, lightPos, 1f));
 
@@ -176,7 +200,7 @@ public class TestGame implements ILogic {
 
 
 
-        sceneManager.incLightAngle(1.1f);
+        sceneManager.incLightAngle(0.09f);
         if(sceneManager.getLightAnle() > 90) {
             sceneManager.getDirectionalLight().setIntensity(0);
             if(sceneManager.getLightAnle() >= 360)

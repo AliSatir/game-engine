@@ -22,7 +22,7 @@ public class Prefab {
         // Rastgele bir başlangıç rotasyonu verelim ki hepsi aynı bakmasın
         float randomYaw = (float) (Math.random() * 360);
 
-        go.addComponent(new Transform(position, new Vector3f(0, randomYaw, 0), 50.0f));
+        go.addComponent(new Transform(position, new Vector3f(0, randomYaw, 0), 1.0f));
         go.addComponent(new MeshRenderer(model));
 
         // Fizik bileşenleri
@@ -31,7 +31,7 @@ public class Prefab {
         go.addComponent(rb);
 
         // Çarpışma kutusu (Modelin boyutuna göre 1,1,1 idealdir)
-        go.addComponent(new BoxCollider(new Vector3f(0.1f, 0.01f, 1f)));
+        go.addComponent(new BoxCollider(new Vector3f(1f, 1f, 1f)));
         go.addComponent(new PlayerController(Launcher.getWindow()));
 
         return go;

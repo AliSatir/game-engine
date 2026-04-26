@@ -28,8 +28,8 @@ import java.util.Map;
 public class EntityRenderer implements IRenderer{
 
     ShaderManager shader;
-    private Map<Model, List<Entity>> entities;
-    private Map<Model,List<GameObject>> entitiesG;
+    private final Map<Model, List<Entity>> entities;
+    private final Map<Model,List<GameObject>> entitiesG;
 
     public EntityRenderer() throws Exception {
         entities = new HashMap<>();

@@ -2,6 +2,7 @@ package com.aas.core.physics;
 
 import com.aas.core.components.BoxCollider;
 import com.aas.core.components.Rigidbody;
+import com.aas.core.components.SphereCollider;
 import com.aas.core.components.Transform;
 import com.aas.core.ecs.GameObject;
 import org.joml.Vector3f;
@@ -16,43 +17,68 @@ public class PhysicsSystem {
         for (GameObject obj : objects) {
             Rigidbody rb = obj.getComponent(Rigidbody.class);
             Transform transform = obj.getComponent(Transform.class);
+            BoxCollider myCollider = obj.getComponent(BoxCollider.class);
 
-            // Eğer nesnede hem Rigidbody hem de Transform varsa fizik uygula
             if (rb != null && transform != null) {
-
+                // 1. Yer çekimi uygula
                 if (rb.useGravity) {
-                    // Hız denklemi: v = v0 + a * dt
                     rb.velocity.y += (GRAVITY_ACCEL * rb.gravityScale) * deltaTime;
                 }
 
-                // Pozisyon denklemi: p = p0 + v * dt
-                frameVelocity.set(rb.velocity).mul(deltaTime);
-                transform.position.add(frameVelocity);
-
-                // Basit Zemin Kontrolü (Collision Detection öncesi geçici çözüm)
-                if (transform.position.y < -1.0f) {
-                    transform.position.y = -1.0f;
-                    rb.velocity.y = 0;
+                // 2. Y ekseninde hareket ve kontrol (Dikey)
+                float moveY = rb.velocity.y * deltaTime;
+                transform.position.y += moveY;
+                if (checkCollisions(obj, objects)) {
+                    transform.position.y -= moveY; // Çarptıysa geri al
+                    rb.velocity.y = 0;             // Enerjiyi sıfırla
                 }
-                // ÇARPIŞMA KONTROLÜ
-                BoxCollider myCollider = obj.getComponent(BoxCollider.class);
-                if (myCollider != null) {
-                    // Bu nesneyi sahnede bulunan DİĞER tüm nesnelerle karşılaştırıyoruz
-                    for (GameObject other : objects) {
-                        if (other == obj) continue; // Kendisiyle çarpışmasın
 
-                        BoxCollider otherCollider = other.getComponent(BoxCollider.class);
-                        if (otherCollider != null) {
-                            if (CollisionDetector.checkAABB(myCollider, otherCollider)) {
-                                // ÇARPIŞMA OLDU!
-                                // Hareketi geri al ve hızı sıfırla
-                                transform.position.sub(frameVelocity);
-                                rb.velocity.y = 0;
-                            }
-                        }
-                    }
+                // 3. X ve Z ekseninde hareket (Yatay)
+                float moveX = rb.velocity.x * deltaTime;
+                transform.position.x += moveX;
+                if (checkCollisions(obj, objects)) {
+                    transform.position.x -= moveX;
+                    rb.velocity.x = 0;
+                }
+
+                float moveZ = rb.velocity.z * deltaTime;
+                transform.position.z += moveZ;
+                if (checkCollisions(obj, objects)) {
+                    transform.position.z -= moveZ;
+                    rb.velocity.z = 0;
                 }
             }
         }
+    }
+
+    // Yardımcı metod: Çarpışma var mı?
+    private boolean checkCollisions(GameObject obj, List<GameObject> allObjects) {
+        BoxCollider myBox = obj.getComponent(BoxCollider.class);
+        SphereCollider mySphere = obj.getComponent(SphereCollider.class);
+
+        for (GameObject other : allObjects) {
+            if (other == obj) continue;
+
+            BoxCollider otherBox = other.getComponent(BoxCollider.class);
+            SphereCollider otherSphere = other.getComponent(SphereCollider.class);
+
+            // 1. Kutu - Kutu
+            if (myBox != null && otherBox != null) {
+                if (CollisionDetector.checkAABB(myBox, otherBox)) return true;
+            }
+            // 2. Küre - Küre
+            if (mySphere != null && otherSphere != null) {
+                if (CollisionDetector.checkSphereSphere(mySphere, otherSphere)) return true;
+            }
+            // 3. Küre - Kutu
+            if (mySphere != null && otherBox != null) {
+                if (CollisionDetector.checkSphereAABB(mySphere, otherBox)) return true;
+            }
+            // 4. Kutu - Küre (Ters kontrol)
+            if (myBox != null && otherSphere != null) {
+                if (CollisionDetector.checkSphereAABB(otherSphere, myBox)) return true;
+            }
+        }
+        return false;
     }
 }
